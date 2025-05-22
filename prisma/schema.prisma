@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  CONSULTANT
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(CONSULTANT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Company {
+  id          String       @id @default(uuid())
+  name        String
+  phone       String
+  email       String
+  segment     String
+  visitors    Visitor[]
+  simulations Simulation[]
+
+  @@map("companies")
+}
+
+model Visitor {
+  id          String       @id @default(uuid())
+  name        String
+  companyId   String
+  company     Company      @relation(fields: [companyId], references: [id])
+  simulations Simulation[]
+
+  @@map("visitors")
+}
+
+model Simulation {
+  id            String      @id @default(uuid())
+  state         String
+  city          String
+  distributor String
+  consumptionKg Float
+  averageCost   Float
+  companyId     String?
+  visitorId     String
+  createdAt     DateTime    @default(now())
+  lead          Lead?
+  saving        Saving?
+  company       Company?    @relation(fields: [companyId], references: [id])
+  visitor       Visitor     @relation(fields: [visitorId], references: [id])
+
+  @@map("simulations")
+}
+
+model Lead {
+  id           String     @id @default(uuid())
+  simulationId String     @unique
+  simulation   Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  status       String     @default("new")
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("leads")
+}
+
+model Saving {
+  id                String     @id @default(uuid())
+  simulationId      String     @unique
+
+  estimatedSaving   Float
+  savingPercentage  Float
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@map("savings")
+  simulation        Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+}

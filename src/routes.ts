@@ -10,7 +10,7 @@ import { visitorController } from "./controllers/visitor.controller";
 const router = Router();
 
 // Auth routes
-router.post("/register", authenticateToken, authController.register);
+router.post("/register", authController.register);
 router.post("/login", authController.login);
 
 // Simulation routes

@@ -1,13 +1,26 @@
-export const calcularEconomia = (consumoKg: number): { economiaReais: number, economiaPorcentagem: number } => {
-  const precoAtual = 8.5; // preço atual por kg
-  const precoIdeal = 5.5; // preço ideal estimado por kg
+type EconomiaResult = {
+  valorJusto?: any;
+  economiaReais?: any;
+  economiaPercentual?: any;
+  feedback?: string;
+};
 
-  const economiaKg = precoAtual - precoIdeal;
-  const economiaTotal = economiaKg * consumoKg;
-  const economiaPercentual = ((economiaKg / precoAtual) * 100);
+export default function calcularEconomiaGLP(
+  valorConta: number,
+  consumoKg: number,
+  precoPorKg: number
+): EconomiaResult {
+  const precoDistribuicaoJusto = 34.74 / 13;
+
+  if (precoPorKg <= precoDistribuicaoJusto) return {feedback: "Sua conta está dentro da conformidade"}
+
+  const valorJusto = parseFloat((consumoKg * precoDistribuicaoJusto).toFixed(2));
+  const economiaReais = parseFloat((valorConta - valorJusto).toFixed(2));
+  const economiaPercentual = parseFloat(((economiaReais / valorConta) * 100).toFixed(2));
 
   return {
-    economiaReais: Number(economiaTotal.toFixed(2)),
-    economiaPorcentagem: Number(economiaPercentual.toFixed(2)),
+    valorJusto,
+    economiaReais,
+    economiaPercentual,
   };
-};
+}

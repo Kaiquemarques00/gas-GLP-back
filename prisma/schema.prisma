@@ -9,83 +9,123 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  CONSULTANT
+  FUNC
+  CLIENTE
 }
 
 model User {
   id        String   @id @default(uuid())
   name      String
-  email     String   @unique
+  email     String?  @unique
   password  String
-  role      UserRole @default(CONSULTANT)
+  role      UserRole @default(CLIENTE)
+  companyId String?
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  queries Query[]
 
   @@map("users")
 }
 
+model Contract {
+  id        String   @id @default(uuid())
+  companyId String
+  pdfPath   String
+  isSigned  Boolean  @default(false)
+  signedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("contracts")
+}
+
 model Company {
-  id          String       @id @default(uuid())
-  name        String
-  phone       String
-  email       String
-  segment     String
-  visitors    Visitor[]
-  simulations Simulation[]
+  id           String  @id @default(uuid())
+  razaoSocial  String
+  nomeFantasia String
+  cnpj         String  @unique
+  segmento     String
+  cep          String
+  estado       String
+  cidade       String
+  bairro       String
+  endereco     String
+  numero       String
+  complemento  String?
+
+  responsavel String
+  telefone    String
+  email       String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  contracts Contract[] // 👈 Relacionamento 1:N com contratos
 
   @@map("companies")
 }
 
-model Visitor {
-  id          String       @id @default(uuid())
-  name        String
-  companyId   String
-  company     Company      @relation(fields: [companyId], references: [id])
-  simulations Simulation[]
-
-  @@map("visitors")
-}
-
 model Simulation {
-  id            String      @id @default(uuid())
+  id            String   @id @default(uuid())
   state         String
   city          String
-  distributor String
+  distributor   String
   consumptionKg Float
   averageCost   Float
-  companyId     String?
-  visitorId     String
-  createdAt     DateTime    @default(now())
-  lead          Lead?
-  saving        Saving?
-  company       Company?    @relation(fields: [companyId], references: [id])
-  visitor       Visitor     @relation(fields: [visitorId], references: [id])
+  pricePerKg    Float
+  companyName   String
+  visitorName   String
+  phone         String
+  email         String
+  segment       String
+  createdAt     DateTime @default(now())
 
   @@map("simulations")
 }
 
-model Lead {
-  id           String     @id @default(uuid())
-  simulationId String     @unique
-  simulation   Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
-  status       String     @default("new")
-  notes        String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+model Query {
+  id            String @id @default(uuid())
+  consumptionKg Float
+  averageCost   Float
+  pricePerKg    Float
+  userId        String
 
-  @@map("leads")
+  user User? @relation(fields: [userId], references: [id])
+  saving        Saving?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("queries")
 }
 
 model Saving {
-  id                String     @id @default(uuid())
-  simulationId      String     @unique
+  id               String   @id @default(uuid())
+  queryId           String   @unique
+  fairValue        Float
+  estimatedSaving  Float
+  savingPercentage Float
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  estimatedSaving   Float
-  savingPercentage  Float
-
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  query Query @relation(fields: [queryId], references: [id], onDelete: Cascade)
 
   @@map("savings")
-  simulation        Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+}
+
+model Cotacao {
+  id          String   @id @default(uuid())
+  valuePerKg  Float
+
+  createdAt   DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@map("cotacoes")
 }
